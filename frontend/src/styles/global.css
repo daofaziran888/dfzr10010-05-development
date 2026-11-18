@@ -33,3 +33,11 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .link { border: none; background: none; color: var(--brand); cursor: pointer; padding: 0; }
 .page-foot { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--muted); }
 .error-text { color: #b42318; }
+.notice-text { color: #1f6feb; font-size: 13px; margin: 4px 0; }
+.panel { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 14px; }
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.panel-head h3 { font-size: 14px; margin: 0; }
+.panel-meta { color: var(--muted); font-size: 12px; }
+.action-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.muted { color: var(--muted); }
+.filter-item select { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: #fff; }

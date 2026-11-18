@@ -16,7 +16,8 @@ class Store:
         }
 
     def module_names(self) -> list[str]:
-        return sorted(self._tables)
+        # 下划线开头的是执行计划编排用的内部表（配置、明细、批次），不参与模块概览。
+        return sorted(name for name in self._tables if not name.startswith("_"))
 
     def rows(self, module: str) -> list[dict[str, Any]]:
         return self._tables.setdefault(module, [])
@@ -42,6 +43,8 @@ class Store:
             {"label": "今日新增", "value": sum(int(item["created"]) for item in modules)},
             {"label": "待处理", "value": sum(int(item["pending"]) for item in modules)},
             {"label": "异常量", "value": sum(int(item["abnormal"]) for item in modules)},
+            {"label": "优化执行计划", "value": len(self.rows("_iceberg_plans"))},
+            {"label": "预算核对项", "value": len(self.rows("_iceberg_reconcile"))},
         ]
         return {"cards": cards, "modules": modules}
 

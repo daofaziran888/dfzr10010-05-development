@@ -7,6 +7,7 @@
       </div>
       <div class="page-actions">
         <button class="btn primary" type="button" @click="openCreate">登记优化任务</button>
+        <button class="btn" type="button" @click="goPlan">表优化执行计划</button>
         <button class="btn" type="button" @click="exportRows">导出表优化管理清单</button>
       </div>
     </header>
@@ -36,7 +37,12 @@
       </thead>
       <tbody>
         <tr v-for="row in rows" :key="String(row.id)">
-          <td v-for="column in columns" :key="column">{{ row[column] ?? '—' }}</td>
+          <td v-for="column in columns" :key="column">
+            <RouterLink v-if="column === '任务编号'" class="link" :to="`/plan?table=${encodeURIComponent(String(row['表名称'] ?? ''))}`">
+              {{ row[column] ?? '—' }}
+            </RouterLink>
+            <span v-else>{{ row[column] ?? '—' }}</span>
+          </td>
           <td class="row-actions">
             <button
               v-for="action in actions"
@@ -64,11 +70,13 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 import { request } from '@/api/client'
 
 type Row = Record<string, string | number | null>
 
+const router = useRouter()
 const ENDPOINT = '/api/iceberg'
 const columns = ["任务编号", "表名称", "优化类型", "优化参数", "执行计划", "资源消耗", "优化效果", "任务状态"]
 const actions = ["执行优化", "取消优化", "归档任务"]
@@ -88,6 +96,10 @@ function resetFilters() {
 
 function exportRows() {
   window.open(`${ENDPOINT}/export`, '_blank')
+}
+
+function goPlan() {
+  void router.push('/plan')
 }
 
 function openCreate() {

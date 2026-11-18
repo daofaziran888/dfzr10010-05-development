@@ -17,6 +17,7 @@ const Lineage = () => import('@/views/lineage/index.vue')
 const Schedule = () => import('@/views/schedule/index.vue')
 const Stats = () => import('@/views/stats/index.vue')
 const Migrate = () => import('@/views/migrate/index.vue')
+const Plan = () => import('@/views/plan/index.vue')
 
 const router = createRouter({
   history: createWebHistory(),
@@ -38,6 +39,9 @@ const router = createRouter({
     { path: '/schedule', name: 'schedule', component: Schedule },
     { path: '/stats', name: 'stats', component: Stats },
     { path: '/migrate', name: 'migrate', component: Migrate },
+    // 执行计划详情：/plan/:id；不带 id 时是列表与候选页。
+    { path: '/plan', name: 'plan', component: Plan },
+    { path: '/plan/:id(\\d+)', name: 'plan-detail', component: Plan, props: true },
   ],
 })
 

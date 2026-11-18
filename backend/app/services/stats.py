@@ -31,7 +31,27 @@ class StatsService:
         return rows[start:start + size], total
 
     def get_entry(self, entry_id: int) -> dict[str, Any] | None:
-        return store.find(MODULE, entry_id)
+        entry = store.find(MODULE, entry_id)
+        if entry is None:
+            return None
+        detail = dict(entry)
+        # 统计信息可能由执行计划回写，这里把同一版本的执行计划一起带出来核对。
+        plan_no = entry.get("计划编号")
+        if plan_no:
+            plan = next(
+                (row for row in store.rows("_iceberg_plans")
+                 if str(row.get("计划编号")) == str(plan_no)),
+                None,
+            )
+            if plan is not None:
+                detail["执行计划"] = {
+                    "计划id": plan.get("id"),
+                    "计划编号": plan.get("计划编号"),
+                    "版本": plan.get("版本"),
+                    "状态": plan.get("状态"),
+                    "版本一致": plan.get("版本") == entry.get("计划版本"),
+                }
+        return detail
 
     def create_entry(self, values: dict[str, Any]) -> tuple[dict[str, Any] | None, list[str]]:
         missing = [field for field in REQUIRED_FIELDS if not str(values.get(field) or "").strip()]

@@ -581,3 +581,93 @@ SEED_ROWS: dict[str, list[dict[str, Any]]] = {
   '迁移耗时': '数据迁移管理样例3',
   '任务状态': '数据迁移管理样例3'}]
 }
+
+
+# ---------------------------------------------------------------------------
+# 表优化执行计划的样例数据。
+#
+# 前面的示例行只够看列表；执行计划需要真实的容量口径才能算预算和收益。
+# 这里补几张湖表（重点 ods_orders：1.2 TB / 25400 个小文件）以及对应的容量统计、
+# 优化任务，并给执行计划编排留三张内部表（配置、计划、版本冲突）。
+# ---------------------------------------------------------------------------
+_TABLE_SAMPLES = [
+    # 表名称, 行总数, 文件总数, 总容量, 说明
+    ("ods_orders", 480_000_000, 25_400, "1.2 TB", "订单主表，小文件较多"),
+    ("dwd_order_detail", 96_000_000, 8_200, "640 GB", "订单明细宽表"),
+    ("dim_user", 12_000_000, 1_240, "90 GB", "用户维度表"),
+    ("ads_daily", 24_000_000, 960, "48 GB", "日报聚合表"),
+    ("ods_log", 1_100_000_000, 61_000, "2.4 TB", "访问日志，文件数最多"),
+    ("dwd_payment", 55_000_000, 4_300, "300 GB", "支付流水明细"),
+    ("dim_date", 3_000_000, 800, "12 GB", "日期维度表"),
+    ("dwd_inventory", 41_000_000, 2_600, "180 GB", "库存明细"),
+    ("ads_gmv", 8_000_000, 720, "36 GB", "GMV 指标表"),
+    ("ods_user_event", 320_000_000, 18_000, "900 GB", "用户行为事件"),
+]
+
+_STATS_EXTRA = []
+_TASK_EXTRA = []
+for index, (table, rows, files, capacity, note) in enumerate(_TABLE_SAMPLES, start=4):
+    _STATS_EXTRA.append({
+        "id": index,
+        "status": "已采集",
+        "pending": False,
+        "abnormal": False,
+        "报告编号": f"STAT-{index:04d}",
+        "表名称": table,
+        "行总数": rows,
+        "文件总数": files,
+        "总容量": capacity,
+        "列统计": f"{table} 共 18 个字段，主键与分区字段统计完整",
+        "统计时间": "2026-11-18",
+        "报告状态": "已采集",
+        "容量说明": note,
+    })
+    _TASK_EXTRA.append({
+        "id": index,
+        "status": "待执行",
+        "pending": True,
+        "abnormal": False,
+        "任务编号": f"ICEB-{index:04d}",
+        "表名称": table,
+        "优化类型": "小文件合并" if files >= 1000 else "排序重写",
+        "优化参数": f"行组上限 512MB，目标文件数按容量自动计算",
+        "执行计划": "",
+        "资源消耗": "",
+        "优化效果": "",
+        "任务状态": "待执行",
+        "登记时间": "2026-11-18",
+    })
+
+# 同表并发登记的第二条任务：收益比例更高，用来演示版本冲突处理；
+# 执行计划里同表只保留一个活动批次。
+_TASK_EXTRA.append({
+    "id": 14,
+    "status": "待执行",
+    "pending": True,
+    "abnormal": False,
+    "任务编号": "ICEB-0014",
+    "表名称": "dwd_payment",
+    "优化类型": "数据压缩",
+    "优化参数": "按列压缩，新到达的高收益任务，与已预留的小文件合并批次冲突",
+    "执行计划": "",
+    "资源消耗": "",
+    "优化效果": "",
+    "任务状态": "待执行",
+    "登记时间": "2026-11-18",
+})
+
+SEED_ROWS.setdefault("stats", []).extend(_STATS_EXTRA)
+SEED_ROWS.setdefault("iceberg", []).extend(_TASK_EXTRA)
+
+SEED_ROWS["_iceberg_plan_config"] = [{
+    "id": 1,
+    "资源总预算": "800 GB",
+    "行组大小上限": "512 MB",
+    "默认排序": "收益比例",
+    "配置版本": 1,
+    "更新人": "值班管理员",
+}]
+SEED_ROWS["_iceberg_plans"] = []
+SEED_ROWS["_iceberg_conflicts"] = []
+SEED_ROWS["_iceberg_reconcile"] = []
+SEED_ROWS["_iceberg_plan_versions"] = []
